@@ -15,6 +15,11 @@ import {
   Wifi,
 } from "lucide-react";
 
+const canUseSpeechSynthesis = () =>
+  typeof window !== "undefined" &&
+  typeof window.speechSynthesis?.speak === "function" &&
+  typeof window.SpeechSynthesisUtterance === "function";
+
 const categories = [
   { id: "kids", label: "Kids", emoji: "🧒", color: "#28a745", wash: "#eaf9ed" },
   { id: "teenage", label: "Teenage", emoji: "🎒", color: "#ff6a26", wash: "#fff0e8" },
@@ -176,7 +181,10 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
   const [jokeIndex, setJokeIndex] = useState(() => getRandomJokeIndex(jokeList.length));
   const [copied, setCopied] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechMessage, setSpeechMessage] = useState("");
   const firstRender = useRef(true);
+  const speechSupported = canUseSpeechSynthesis();
 
   useEffect(() => {
     if (firstRender.current) {
@@ -193,10 +201,58 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
   const joke = jokeList[safeJokeIndex] ?? "No jokes found for this category yet.";
   const jokeCounter = `${jokeList.length ? safeJokeIndex + 1 : 0} / ${jokeList.length}`;
 
+  useEffect(() => {
+    setIsSpeaking(false);
+    setSpeechMessage("");
+
+    return () => {
+      if (speechSupported) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [joke, speechSupported]);
+
+  const stopNarration = () => {
+    if (speechSupported) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+  };
+
+  const listenToJoke = () => {
+    if (!speechSupported) {
+      setSpeechMessage("Voice is not supported in this browser.");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(joke);
+    utterance.lang = language === "hindi" ? "hi-IN" : "en-US";
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    setSpeechMessage("");
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const nextJoke = () => {
+    stopNarration();
     setJokeIndex((current) => getRandomJokeIndex(jokeList.length, current));
     setCopied(false);
     setFavorite(false);
+  };
+
+  const goBack = () => {
+    stopNarration();
+    onBack();
+  };
+
+  const changeCategory = () => {
+    stopNarration();
+    onChangeCategory();
   };
 
   const copyJoke = async () => {
@@ -224,7 +280,7 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
       <header className="screen-header green-header">
         <StatusBar light />
         <div className="nav-row">
-          <BackButton onClick={onBack} label="Back to categories" />
+          <BackButton onClick={goBack} label="Back to categories" />
           <h1 id="joke-title">Your Joke</h1>
           <span className="header-face" aria-hidden="true">😄</span>
         </div>
@@ -248,6 +304,16 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
           </div>
         </article>
 
+        <div className="voice-actions">
+          <button className="voice-button listen-button" type="button" onClick={listenToJoke} disabled={!speechSupported}>
+            <span>🔊 Listen</span>
+          </button>
+          <button className="voice-button stop-button" type="button" onClick={stopNarration} disabled={!speechSupported || !isSpeaking}>
+            <span>Stop</span>
+          </button>
+        </div>
+        {speechMessage && <p className="voice-message">{speechMessage}</p>}
+
         <div className="joke-actions">
           <ActionButton
             label={copied ? "Copied" : "Copy"}
@@ -270,7 +336,7 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
             <span>Next Joke</span>
             <ArrowRight size={23} />
           </button>
-          <button className="change-button" type="button" onClick={onChangeCategory}>
+          <button className="change-button" type="button" onClick={changeCategory}>
             <ArrowLeft size={20} />
             <span>Change Category</span>
           </button>

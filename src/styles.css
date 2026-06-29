@@ -831,6 +831,58 @@ button:focus-visible {
   font-size: 16px;
 }
 
+.voice-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.voice-button {
+  height: 48px;
+  border: 1px solid rgba(29, 114, 59, 0.08);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #167d45;
+  cursor: pointer;
+  box-shadow: 0 6px 13px rgba(35, 106, 58, 0.08);
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  transition: transform 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+.listen-button {
+  background: linear-gradient(110deg, #eafbf0, #ffffff);
+}
+
+.stop-button {
+  color: #d65b2a;
+}
+
+.voice-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: white;
+}
+
+.voice-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.voice-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.voice-message {
+  margin: -4px 0 10px;
+  color: #6c7d72;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .joke-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

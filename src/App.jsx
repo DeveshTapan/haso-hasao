@@ -104,7 +104,7 @@ function LanguageScreen({ onChoose }) {
   );
 }
 
-function CategoryScreen({ language, onBack, onChoose }) {
+function CategoryScreen({ language, onBack, onChoose, onHome }) {
   return (
     <section className="screen category-screen" aria-labelledby="category-title">
       <header className="screen-header purple-header">
@@ -139,11 +139,11 @@ function CategoryScreen({ language, onBack, onChoose }) {
         </div>
       </main>
 
-      <footer className="category-footer">
+      <button className="category-footer" type="button" onClick={onHome}>
         <House size={20} fill="currentColor" />
         <span>Home</span>
         <span className="footer-dot" />
-      </footer>
+      </button>
     </section>
   );
 }
@@ -273,7 +273,12 @@ export default function App() {
         <div className="screen-transition" key={screen}>
           {screen === "language" && <LanguageScreen onChoose={chooseLanguage} />}
           {screen === "category" && (
-            <CategoryScreen language={language} onBack={() => setScreen("language")} onChoose={chooseCategory} />
+            <CategoryScreen
+              language={language}
+              onBack={() => setScreen("language")}
+              onChoose={chooseCategory}
+              onHome={() => setScreen("language")}
+            />
           )}
           {screen === "joke" && (
             <JokeScreen

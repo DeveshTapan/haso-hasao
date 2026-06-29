@@ -727,10 +727,17 @@ button:focus-visible {
   overflow-y: auto;
 }
 
-.joke-chips {
+.joke-meta {
   display: flex;
+  align-items: center;
   gap: 9px;
   justify-content: space-between;
+}
+
+.joke-chips {
+  min-width: 0;
+  display: flex;
+  gap: 9px;
 }
 
 .joke-chips span {
@@ -747,6 +754,20 @@ button:focus-visible {
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.joke-counter {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(37, 164, 91, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #18864a;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 5px 11px rgba(35, 106, 58, 0.06);
 }
 
 .joke-card {

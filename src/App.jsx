@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { jokes } from "./data/jokes";
 import {
   ArrowLeft,
@@ -21,6 +21,19 @@ const categories = [
   { id: "adults", label: "Adults", emoji: "💼", color: "#1471c9", wash: "#eaf4ff" },
   { id: "oldAge", label: "Old Age", emoji: "👴", color: "#753bc2", wash: "#f3ebff" },
 ];
+
+function getRandomJokeIndex(totalJokes, currentIndex = -1) {
+  if (totalJokes <= 1) {
+    return 0;
+  }
+
+  if (currentIndex < 0 || currentIndex >= totalJokes) {
+    return Math.floor(Math.random() * totalJokes);
+  }
+
+  const randomIndex = Math.floor(Math.random() * (totalJokes - 1));
+  return randomIndex >= currentIndex ? randomIndex + 1 : randomIndex;
+}
 
 function StatusBar({ light = false }) {
   const [time, setTime] = useState("");
@@ -159,14 +172,29 @@ function ActionButton({ icon, label, active = false, onClick, className = "" }) 
 
 function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
   const category = categories.find((item) => item.id === categoryId);
-  const jokeList = useMemo(() => jokes[language][categoryId], [language, categoryId]);
-  const [jokeIndex, setJokeIndex] = useState(0);
+  const jokeList = useMemo(() => jokes[language]?.[categoryId] ?? [], [language, categoryId]);
+  const [jokeIndex, setJokeIndex] = useState(() => getRandomJokeIndex(jokeList.length));
   const [copied, setCopied] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const firstRender = useRef(true);
 
-  const joke = jokeList[jokeIndex];
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+
+    setJokeIndex(getRandomJokeIndex(jokeList.length));
+    setCopied(false);
+    setFavorite(false);
+  }, [jokeList]);
+
+  const safeJokeIndex = jokeList.length ? Math.min(jokeIndex, jokeList.length - 1) : 0;
+  const joke = jokeList[safeJokeIndex] ?? "No jokes found for this category yet.";
+  const jokeCounter = `${jokeList.length ? safeJokeIndex + 1 : 0} / ${jokeList.length}`;
+
   const nextJoke = () => {
-    setJokeIndex((current) => (current + 1) % jokeList.length);
+    setJokeIndex((current) => getRandomJokeIndex(jokeList.length, current));
     setCopied(false);
     setFavorite(false);
   };
@@ -203,12 +231,15 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
       </header>
 
       <main className="joke-content">
-        <div className="joke-chips">
-          <span><Globe2 size={15} /> {language === "hindi" ? "हिंदी" : "English"}</span>
-          <span>{category.emoji} {category.label}</span>
+        <div className="joke-meta">
+          <div className="joke-chips">
+            <span><Globe2 size={15} /> {language === "hindi" ? "हिंदी" : "English"}</span>
+            <span>{category.emoji} {category.label}</span>
+          </div>
+          <span className="joke-counter" aria-label={`Joke ${jokeCounter}`}>{jokeCounter}</span>
         </div>
 
-        <article className="joke-card" key={jokeIndex}>
+        <article className="joke-card" key={safeJokeIndex}>
           <div className="quote-mark" aria-hidden="true">“</div>
           <p lang={language === "hindi" ? "hi" : "en"}>{joke}</p>
           <div className="joke-card-footer">

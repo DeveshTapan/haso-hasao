@@ -20,6 +20,17 @@ const canUseSpeechSynthesis = () =>
   typeof window.speechSynthesis?.speak === "function" &&
   typeof window.SpeechSynthesisUtterance === "function";
 
+const cleanJokeForNarration = (text) =>
+  text
+    .replace(/[#*0-9]\uFE0F?\u20E3/gu, "")
+    .replace(
+      /[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\uFE0E\uFE0F\u200D\u20E3\u{E0020}-\u{E007F}]/gu,
+      "",
+    )
+    .replace(/[^\S\r\n]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .trim();
+
 const categories = [
   { id: "kids", label: "Kids", emoji: "🧒", color: "#28a745", wash: "#eaf9ed" },
   { id: "teenage", label: "Teenage", emoji: "🎒", color: "#ff6a26", wash: "#fff0e8" },
@@ -226,7 +237,8 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
     }
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(joke);
+    const narrationText = cleanJokeForNarration(joke);
+    const utterance = new SpeechSynthesisUtterance(narrationText);
     utterance.lang = language === "hindi" ? "hi-IN" : "en-US";
     utterance.rate = 0.9;
     utterance.pitch = 1;

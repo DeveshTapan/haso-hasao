@@ -31,6 +31,20 @@ const cleanJokeForNarration = (text) =>
     .replace(/ *\n */g, "\n")
     .trim();
 
+const getVoiceId = (voice) => voice.voiceURI || `${voice.name}-${voice.lang}`;
+
+const getPreferredVoice = (voices, language) => {
+  const targetLanguage = language === "hindi" ? "hi-IN" : "en-US";
+  const languagePrefix = language === "hindi" ? "hi" : "en";
+  const normalizedTarget = targetLanguage.toLowerCase();
+
+  return (
+    voices.find((voice) => voice.lang.toLowerCase() === normalizedTarget) ||
+    voices.find((voice) => voice.lang.toLowerCase().startsWith(languagePrefix)) ||
+    null
+  );
+};
+
 const categories = [
   { id: "kids", label: "Kids", emoji: "🧒", color: "#28a745", wash: "#eaf9ed" },
   { id: "teenage", label: "Teenage", emoji: "🎒", color: "#ff6a26", wash: "#fff0e8" },
@@ -194,8 +208,22 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
   const [favorite, setFavorite] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechMessage, setSpeechMessage] = useState("");
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState("");
   const firstRender = useRef(true);
   const speechSupported = canUseSpeechSynthesis();
+
+  useEffect(() => {
+    if (!speechSupported) {
+      return undefined;
+    }
+
+    const updateVoices = () => setAvailableVoices(window.speechSynthesis.getVoices());
+    updateVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", updateVoices);
+
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", updateVoices);
+  }, [speechSupported]);
 
   useEffect(() => {
     if (firstRender.current) {
@@ -238,9 +266,18 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
 
     window.speechSynthesis.cancel();
     const narrationText = cleanJokeForNarration(joke);
-    const utterance = new SpeechSynthesisUtterance(narrationText);
-    utterance.lang = language === "hindi" ? "hi-IN" : "en-US";
-    utterance.rate = 0.9;
+    const narrationIntro = language === "hindi" ? "सुनिए एक मजेदार चुटकुला।" : "Here is a funny joke.";
+    const targetLanguage = language === "hindi" ? "hi-IN" : "en-US";
+    const selectedVoice =
+      availableVoices.find((voice) => getVoiceId(voice) === selectedVoiceId) ||
+      getPreferredVoice(availableVoices, language);
+    const utterance = new SpeechSynthesisUtterance(`${narrationIntro}\n\n${narrationText}`);
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+    utterance.lang = targetLanguage;
+    utterance.rate = language === "hindi" ? 0.85 : 0.9;
     utterance.pitch = 1;
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -315,6 +352,20 @@ function JokeScreen({ language, categoryId, onBack, onChangeCategory }) {
             <span>😂</span>
           </div>
         </article>
+
+        {availableVoices.length > 0 && (
+          <label className="voice-selector">
+            <span>Voice</span>
+            <select value={selectedVoiceId} onChange={(event) => setSelectedVoiceId(event.target.value)}>
+              <option value="">Auto ({language === "hindi" ? "Hindi" : "English"})</option>
+              {availableVoices.map((voice) => (
+                <option key={getVoiceId(voice)} value={getVoiceId(voice)}>
+                  {voice.name} ({voice.lang})
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className="voice-actions">
           <button className="voice-button listen-button" type="button" onClick={listenToJoke} disabled={!speechSupported}>

@@ -831,6 +831,37 @@ button:focus-visible {
   font-size: 16px;
 }
 
+.voice-selector {
+  margin-bottom: 9px;
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(29, 114, 59, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #627168;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.voice-selector select {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #167d45;
+  font: inherit;
+  cursor: pointer;
+}
+
+.voice-selector select:focus-visible {
+  outline: 2px solid rgba(22, 125, 69, 0.28);
+  outline-offset: 2px;
+}
+
 .voice-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
